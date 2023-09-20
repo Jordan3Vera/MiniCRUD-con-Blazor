@@ -1,0 +1,87 @@
+﻿@page "/ListaClientes"
+@using PequeñoCRUD.Data
+@using PequeñoCRUD.Interfaces
+@inject ICustomerServices customerServices
+@inject IJSRuntime JsRuntime
+
+
+<h1>Lista de clientes</h1>
+
+@if (customers == null)
+{
+	<p>
+		<em>Cargando...</em>
+	</p>
+}
+else 
+{
+
+	<div class="input-group">
+		<input id="search" type="text" @bind="stringSearched" placeholder="Nombre/Correo/Teléfono" class="form-control"/>
+		<span class="input-group-btn">
+			<input type="submit" class="btn btn-default btn-info" value="Buscar" @onclick="(() => Search())"/>
+		</span>
+	</div>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Nombre</th>
+				<th>Correo</th>
+				<th>Teléfono</th>
+				<th colspan="2">Acciones</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach(Customer c in customers)
+			{
+				<tr>
+					<td>@c.Name</td>
+					<td>@c.Email</td>
+					<td>@c.Phone</td>
+					<td>
+						<a href="/NuevoCliente/@c.Id" class="btn btn-info m-1">Editar</a>
+					</td>
+					<td>
+						<input type="submit" class="btn btn-danger" value="Borrar" @onclick="(() => Delete(c.Id))">
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+
+@code {
+	private IEnumerable<Customer> customers;
+
+	private string stringSearched { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		try
+		{
+			customers = await customerServices.CustomerAlls();
+		}
+		catch
+		{
+			throw;
+		}
+	}
+
+	protected async Task Delete(int id)
+	{
+		bool confirm = await JsRuntime.InvokeAsync<bool>("confirm", "Estas seguro?");
+
+		if (confirm)
+		{
+			await customerServices.DeleteCustomer(id);
+			customers = await customerServices.CustomerAlls();
+		}
+	}
+
+	protected async Task Search()
+	{
+		customers = await customerServices.CustomerAlls(stringSearched);
+	}
+}

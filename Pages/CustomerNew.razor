@@ -1,0 +1,73 @@
+﻿@page "/NuevoCliente"
+@page "/NuevoCliente/{id:int}"
+@using PequeñoCRUD.Data;
+@using PequeñoCRUD.Interfaces;
+@inject ICustomerServices CustomerService
+@inject NavigationManager navigationManager
+
+@*<h1>Nuevo Cliente</h1>*@
+<h1>@(isNewCustomer ? "Nuevo Cliente" : "Editar Cliente")</h1>
+
+<EditForm Model="@customer" OnValidSubmit="HandleValidSubmit">
+	<DataAnnotationsValidator />
+		<div class="row content">
+			<div class="col-md-1"><label for="Nombre">Nombre:</label></div>
+			<div class="col-md-2"><InputText id="name" @bind-Value="customer.Name" /></div>
+			<div class="col-md-4"><ValidationMessage For="@(() => customer.Name)" /></div>
+		</div>
+
+		<div class="row content">
+			<div class="col-md-1"><label for="Correo">Correo</label></div>
+			<div class="col-md-2"><InputText id="email" @bind-Value="customer.Email" /></div>
+			<div class="col-md-4"><ValidationMessage For="@(() => customer.Email)" /></div>
+		</div>
+
+		<div class="row content">
+			<div class="col-md-1"><label for="Phone">Teléfono:</label></div>
+			<div class="col-md-2"><InputText id="phone" @bind-Value="customer.Phone" /></div>
+			<div class="col-md-4"><ValidationMessage For="@(() => customer.Phone)" /></div>
+		</div>
+
+		<div class="row content">
+			<div class="col-md-1">
+				<input type="submit" class="btn btn-primary" value="Guardar" @onclick="Save" />
+			</div>
+			<div class="col-md-2">
+				<input type="button" class="btn btn-danger" value="Cancelar" @onclick="Cancel" />
+			</div>
+		</div>
+</EditForm>
+
+@code {
+
+	[Parameter]
+	public int id { get; set; }
+
+	Customer customer = new Customer();
+	bool isNewCustomer = true; //Por defecto es un nuevo cliente
+
+	protected async Task Save()
+	{
+		await CustomerService.SaveCustomer(customer);
+		navigationManager.NavigateTo("/ListaClientes");
+	}
+
+	protected void Cancel()
+	{
+		navigationManager.NavigateTo("/ListaClientes");
+	}
+
+	protected void HandleValidSubmit()
+	{
+		Console.WriteLine("OnValidSubmit");
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		if(id > 0)
+		{
+			customer = await CustomerService.GetDataCustomer(id);
+			isNewCustomer = false;
+		}
+	}
+}
